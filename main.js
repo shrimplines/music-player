@@ -1,41 +1,36 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
-const path = require('path');
 const { exec } = require('child_process');
 
+let mainWindow;
+
 function createWindow() {
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 320, height: 180,
     transparent: true, frame: false, alwaysOnTop: true,
     webPreferences: {
-      // Use the built-in Forge entry points if using Forge, 
-      // otherwise use path.join(__dirname, 'preload.js')
-      preload: typeof MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY !== 'undefined' 
-               ? MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY 
-               : path.join(__dirname, 'preload.js'),
+      // Forge Webpack uses this specific constant:
+      preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       contextIsolation: true,
       nodeIntegration: false
     }
   });
-
-  // Load your HTML
-  if (typeof MAIN_WINDOW_WEBPACK_ENTRY !== 'undefined') {
-    win.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
-  } else {
-    win.loadFile('index.html');
-  }
+  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 }
 
-// THIS HANDLES YOUR BUTTONS
 ipcMain.on('media-control', (event, command) => {
-  let powershellCommand = "";
-  
-  if (command === 'play-pause') powershellCommand = "pause";
-  if (command === 'next') powershellCommand = "next";
-  if (command === 'prev') powershellCommand = "prev";
+  // Confirm back to the index.html that we received the click
+  event.reply('terminal-log', `Sent: ${command}`);
 
-  // This talks directly to Windows to press the media keys for you
-  const script = `(New-Object -ComObject wscript.shell).SendKeys([char]17${powershellCommand === 'pause' ? '9' : powershellCommand === 'next' ? '6' : '7'})`;
-  exec(`powershell -command "${script}"`);
+  let key;
+  if (command === 'play-pause') key = 179;
+  if (command === 'next') key = 176;
+  if (command === 'prev') key = 177;
+
+  if (key) {
+    // This command forces a Virtual Key press at the Windows OS level
+    const psCommand = `powershell -Command "$wshell = New-Object -ComObject WScript.Shell; $wshell.SendKeys([char]${key})"`;
+    exec(psCommand);
+  }
 });
 
 app.whenReady().then(createWindow);
