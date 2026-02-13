@@ -1,8 +1,8 @@
-# ‧₊˚ iPod Spotify Widget ˚₊‧
+# ‧₊˚ iPod Media Widget ˚₊‧
 
 ### basically a tiny iPod for your desktop ‧₊˚✧
 
-it lets you control spotify using the skip forward/back and pause buttons on the click wheel.
+it lets you control spotify (or other forms of playing media) using the skip forward/back and pause buttons on the click wheel.
 
 
 ## ✧ what it does
